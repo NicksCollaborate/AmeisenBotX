@@ -72,7 +72,7 @@ namespace AmeisenBotX.Core.Statemachine.States
                     if (path != null)
                     {
                         IEnumerable<WowUnit> nearbyEnemies =
-                            WowInterface.ObjectManager.GetEnemiesInPath<WowUnit>(path, 10.0);
+                            WowInterface.ObjectManager.GetHostilesInPath<WowUnit>(path, 10.0);
                         if (nearbyEnemies.Any())
                         {
                             var enemy = nearbyEnemies.FirstOrDefault();

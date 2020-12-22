@@ -98,7 +98,7 @@ namespace AmeisenBotX.Core.Quest.Objects.Objectives
                     if (path != null)
                     {
                         var nearEnemies =
-                            WowInterface.ObjectManager.GetEnemiesInPath<WowUnit>(path, 10.0);
+                            WowInterface.ObjectManager.GetHostilesInPath<WowUnit>(path, 10.0);
                         if (nearEnemies.Any())
                         {
                             WowUnit = nearEnemies.FirstOrDefault();

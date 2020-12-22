@@ -148,7 +148,18 @@ namespace AmeisenBotX.Core.Data
             lock (queryLock)
             {
                 return GetNearEnemies<T>(position, distance)
-                    .Where(e => e.IsInCombat && (e.IsTaggedByMe || e.TargetGuid == WowInterface.ObjectManager.PlayerGuid));
+                    .Where(e => e.IsInCombat
+                    && (e.IsTaggedByMe || e.TargetGuid == WowInterface.ObjectManager.PlayerGuid || e.TargetGuid == WowInterface.ObjectManager.PetGuid));
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public IEnumerable<T> GetEnemiesTargetingUs<T>(Vector3 position, double distance) where T : WowUnit
+        {
+            lock (queryLock)
+            {
+                return GetNearEnemies<T>(position, distance)
+                    .Where(e => e.IsInCombat && (e.TargetGuid == WowInterface.ObjectManager.PlayerGuid));
             }
         }
 
@@ -182,20 +193,24 @@ namespace AmeisenBotX.Core.Data
                     .Where(e => !e.IsDead
                          && !e.IsNotAttackable
                          && WowInterface.HookManager.WowGetUnitReaction(Player, e) != WowUnitReaction.Friendly
-                         && WowInterface.HookManager.WowGetUnitReaction(Player, e) != WowUnitReaction.Neutral
                          && e.Position.GetDistance(position) < distance);
             }
         }
 
-        public IEnumerable<T> GetEnemiesInPath<T>(IEnumerable<Vector3> path, double distance) where T : WowUnit
+        public IEnumerable<T> GetNearHostiles<T>(Vector3 position, double distance) where T : WowUnit
+        {
+            return GetNearEnemies<T>(position, distance).Where(e => WowInterface.HookManager.WowGetUnitReaction(Player, e) != WowUnitReaction.Neutral);
+        }
+
+        public IEnumerable<T> GetHostilesInPath<T>(IEnumerable<Vector3> path, double distance) where T : WowUnit
         {
             foreach (Vector3 pathPosition in path)
             {
-                var nearEnemies =
-                    WowInterface.ObjectManager.GetNearEnemies<T>(pathPosition, distance);
-                if (nearEnemies.Any())
+                var nearHostiles =
+                    WowInterface.ObjectManager.GetNearHostiles<T>(pathPosition, distance);
+                if (nearHostiles.Any())
                 {
-                    return nearEnemies;
+                    return nearHostiles;
                 }
             }
 
