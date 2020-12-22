@@ -18,7 +18,10 @@ namespace AmeisenBotX.Core.Tactic
             {
                 foreach (ITactic tactic in Tactics.Values)
                 {
-                    if (tactic.ExecuteTactic(role, isMelee, out preventMovement, out allowAttacking)) return true;
+                    if (tactic.ExecuteTactic(role, isMelee, out preventMovement, out allowAttacking))
+                    {
+                        return true;
+                    }
                 }
             }
 
@@ -40,6 +43,11 @@ namespace AmeisenBotX.Core.Tactic
         public void Reset()
         {
             Tactics.Clear();
+        }
+        
+        public bool HasTactics()
+        {
+            return Tactics.Count > 0;
         }
     }
 }

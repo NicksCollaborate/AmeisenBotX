@@ -73,7 +73,10 @@ namespace AmeisenBotX.Core
 
             ExecutionMsStopwatch = new Stopwatch();
 
-            if (!Directory.Exists(BotDataPath)) Directory.CreateDirectory(BotDataPath);
+            if (!Directory.Exists(BotDataPath))
+            {
+                Directory.CreateDirectory(BotDataPath);
+            }
 
             SetupLogging(botDataPath, accountName);
 
@@ -376,6 +379,8 @@ namespace AmeisenBotX.Core
                 new Statemachine.CombatClasses.einTyp.WarriorArms(WowInterface),
                 new Statemachine.CombatClasses.einTyp.WarriorFury(WowInterface),
                 new Statemachine.CombatClasses.ToadLump.Rogue(StateMachine),
+                new Statemachine.CombatClasses.Shino.PriestShadow(StateMachine),
+                new Statemachine.CombatClasses.Shino.MageFrost(StateMachine),
             };
         }
 
@@ -740,7 +745,15 @@ namespace AmeisenBotX.Core
                                 switch (WowInterface.RconClient.PendingActions.First())
                                 {
                                     case ActionType.PauseResume:
-                                        if (IsRunning) Pause(); else Resume();
+                                        if (IsRunning)
+                                        {
+                                            Pause();
+                                        }
+                                        else
+                                        {
+                                            Resume();
+                                        }
+
                                         break;
 
                                     default: break;

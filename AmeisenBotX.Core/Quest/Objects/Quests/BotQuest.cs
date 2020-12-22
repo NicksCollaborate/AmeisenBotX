@@ -4,8 +4,11 @@ using AmeisenBotX.Core.Movement.Pathfinding.Objects;
 using AmeisenBotX.Core.Quest.Objects.Objectives;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using AmeisenBotX.Core.Character.Inventory;
+using AmeisenBotX.Core.Character.Inventory.Objects;
 
 namespace AmeisenBotX.Core.Quest.Objects.Quests
 {
@@ -63,7 +66,7 @@ namespace AmeisenBotX.Core.Quest.Objects.Quests
                     totalProgress += Objectives[i].Progress;
                 }
 
-                return Math.Round(totalProgress / (double)Objectives.Count, 1);
+                return Math.Round(totalProgress / Objectives.Count, 1);
             }
         }
 
@@ -77,7 +80,7 @@ namespace AmeisenBotX.Core.Quest.Objects.Quests
         {
             if (!CheckedIfAccepted)
             {
-                if (WowInterface.HookManager.LuaQuestLogIdByTitle(Name, out int _questLogId))
+                if (WowInterface.HookManager.LuaGetQuestLogIdByTitle(Name, out int _questLogId))
                 {
                     Accepted = true;
                 }
@@ -106,16 +109,9 @@ namespace AmeisenBotX.Core.Quest.Objects.Quests
                     }
                     else
                     {
-                        var acceptGossipId = GossipId;
-                        if (WowInterface.HookManager.LuaGetGossipIdByTitle(Name, out int gossipId))
-                        {
-                            acceptGossipId = gossipId;
-                        }
-
-                        WowInterface.HookManager.LuaSelectGossipActiveQuest(acceptGossipId);
+                        WowInterface.HookManager.LuaSelectQuestByNameOrGossipId(Name, GossipId, true);
                         Thread.Sleep(250);
                         WowInterface.HookManager.LuaAcceptQuest();
-
                         Accepted = true;
                     }
 
@@ -157,18 +153,66 @@ namespace AmeisenBotX.Core.Quest.Objects.Quests
                     }
                     else if (ActionEvent.Run())
                     {
-                        var turnInGossipId = GossipId;
-                        if (WowInterface.HookManager.LuaGetGossipIdByTitle(Name, out int gossipId))
-                        {
-                            turnInGossipId = gossipId;
-                        }
-
-
-                        WowInterface.HookManager.LuaSelectGossipActiveQuest(turnInGossipId);
+                        WowInterface.HookManager.LuaSelectQuestByNameOrGossipId(Name, GossipId, false);
                         Thread.Sleep(250);
                         WowInterface.HookManager.LuaCompleteQuest();
                         Thread.Sleep(250);
-                        WowInterface.HookManager.LuaGetQuestReward(1);
+
+                        bool selectedReward = false;
+                        // TODO: This only works for the english locale!
+                        if (WowInterface.HookManager.LuaGetQuestLogIdByTitle(Name, out int questLogId))
+                        {
+                            WowInterface.HookManager.LuaSelectQuestLogEntry(questLogId);
+                            if (WowInterface.HookManager.LuaGetNumQuestLogChoices(out int numChoices))
+                            {
+                                for (int i = 1; i <= numChoices; ++i)
+                                {
+                                    if (WowInterface.HookManager.LuaGetQuestLogChoiceItemLink(i,
+                                        out string itemLink))
+                                    {
+                                        string itemJson =
+                                            WowInterface.HookManager.LuaGetItemJsonByNameOrLink(itemLink);
+
+                                        WowBasicItem item =
+                                            ItemFactory.BuildSpecificItem(ItemFactory.ParseItem(itemJson));
+
+                                        if (item == null)
+                                        {
+                                            break;
+                                        }
+
+                                        if (item.Name == "0" || item.ItemLink == "0")
+                                        {
+                                            // get the item id and try again
+                                            itemJson = WowInterface.HookManager.LuaGetItemJsonByNameOrLink(
+                                                itemLink.Split(new string[] {"Hitem:"},
+                                                        StringSplitOptions.RemoveEmptyEntries)[1]
+                                                    .Split(new string[] {":"},
+                                                        StringSplitOptions.RemoveEmptyEntries)[0]);
+
+                                            item = ItemFactory.BuildSpecificItem(ItemFactory.ParseItem(itemJson));
+                                        }
+
+                                        if (WowInterface.CharacterManager.IsItemAnImprovement(item,
+                                            out IWowItem itemToReplace))
+                                        {
+                                            WowInterface.HookManager.LuaGetQuestReward(i);
+                                            selectedReward = true;
+                                            break;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        
+                        if (!selectedReward)
+                        {
+                            WowInterface.HookManager.LuaGetQuestReward(1);
+                        }
 
                         Returned = true;
                         return true;

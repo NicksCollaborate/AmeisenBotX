@@ -4,7 +4,6 @@ using AmeisenBotX.Core.Data.Objects.WowObjects;
 using AmeisenBotX.Core.Movement.Pathfinding.Objects;
 using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -65,7 +64,10 @@ namespace AmeisenBotX.Core.Common
 
         public static string CleanString(string input)
         {
-            if (string.IsNullOrWhiteSpace(input)) return string.Empty;
+            if (string.IsNullOrWhiteSpace(input))
+            {
+                return string.Empty;
+            }
 
             StringBuilder sb = new StringBuilder(input.Length);
 
@@ -125,15 +127,12 @@ namespace AmeisenBotX.Core.Common
             SendMessage(windowHandle, WM_KEYDOWN, key, new IntPtr(0));
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsPositionInsideAoeSpell(Vector3 position, IEnumerable<WowDynobject> wowDynobjects)
-        {
-            return wowDynobjects.Any(e => e.Position.GetDistance(position) < e.Radius + 3.0f);
-        }
-
         public static bool IsValidJson(string strInput)
         {
-            if (string.IsNullOrWhiteSpace(strInput)) return false;
+            if (string.IsNullOrWhiteSpace(strInput))
+            {
+                return false;
+            }
 
             strInput = strInput.Trim();
 
@@ -182,7 +181,10 @@ namespace AmeisenBotX.Core.Common
         /// <returns>(LUA string, return variable name)</returns>
         public static (string, string) ObfuscateLua(string input)
         {
-            if (string.IsNullOrWhiteSpace(input)) return (string.Empty, string.Empty);
+            if (string.IsNullOrWhiteSpace(input))
+            {
+                return (string.Empty, string.Empty);
+            }
 
             string returnValueName = "";
 

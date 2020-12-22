@@ -14,8 +14,10 @@ using AmeisenBotX.Logging;
 using AmeisenBotX.Logging.Enums;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using AmeisenBotX.Core.Movement.Enums;
 
 namespace AmeisenBotX.Core.Statemachine.CombatClasses.Jannis
 {
@@ -169,6 +171,20 @@ namespace AmeisenBotX.Core.Statemachine.CombatClasses.Jannis
         protected const string pyroblastSpell = "Pyroblast";
         protected const string scorchSpell = "Scorch";
         protected const string spellStealSpell = "Spellsteal";
+        protected const string iceBarrierSpell = "Ice Barrier";
+        protected const string frostArmorSpell = "Frost Armor";
+        protected const string iceArmorSpell = "Ice Armor";
+        protected const string deepFreezeSpell = "Deep Freeze";
+        protected const string frostBoltSpell = "Frostbolt";
+        protected const string coldSnapSpell = "Cold Snap";
+        protected const string summonWaterElementalSpell = "Summon Water Elemental";
+        protected const string conjureWaterSpell = "Conjure Water";
+        protected const string conjureFoodSpell = "Conjure Food";
+        protected const string conjureRefreshment = "Conjure Refreshment";
+        protected const string frostNovaSpell = "Frost Nova";
+        protected const string blinkSpell = "Blink";
+        protected const string freezeSpell = "Freeze";
+        protected const string polymorphSpell = "Polymorph";
 
         #endregion Mage
 
@@ -491,6 +507,7 @@ namespace AmeisenBotX.Core.Statemachine.CombatClasses.Jannis
         {
             if (WowInterface.ObjectManager.Player.IsCasting)
             {
+                // TODO: Where is that set?
                 if (!TargetInLineOfSight)
                 {
                     WowInterface.HookManager.LuaSpellStopCasting();
@@ -604,6 +621,31 @@ namespace AmeisenBotX.Core.Statemachine.CombatClasses.Jannis
             {
                 return;
             }
+        }
+
+        public virtual void AttackTarget()
+        {
+            WowUnit target = WowInterface.ObjectManager.Target;
+            if (target == null)
+            {
+                return;
+            }
+            
+            if (WowInterface.ObjectManager.Player.Position.GetDistance(target.Position) <= 3.0)
+            {
+                WowInterface.HookManager.WowStopClickToMove();
+                WowInterface.MovementEngine.Reset();
+                WowInterface.HookManager.WowUnitRightClick(target);
+            }
+            else
+            {
+                WowInterface.MovementEngine.SetMovementAction(MovementAction.Moving, target.Position);
+            }
+        }
+
+        public virtual bool IsTargetAttackable(WowUnit target)
+        {
+            return true;
         }
 
         public override string ToString()
@@ -735,7 +777,7 @@ namespace AmeisenBotX.Core.Statemachine.CombatClasses.Jannis
 
                 bool isTargetMyself = guid == 0;
                 Spell spell = WowInterface.CharacterManager.SpellBook.GetSpellByName(spellName);
-
+                
                 if (spell != null
                     && !CooldownManager.IsSpellOnCooldown(spellName)
                     && (!needsResource || spell.Costs < currentResourceAmount)
@@ -881,14 +923,23 @@ namespace AmeisenBotX.Core.Statemachine.CombatClasses.Jannis
             // spits out stuff like this "1;300" (1 or 0 wether the cast was successful or not);(the cooldown in ms)
             if (WowInterface.HookManager.WowExecuteLuaAndRead(BotUtils.ObfuscateLua($"{{v:3}},{{v:4}}=GetSpellCooldown(\"{spellName}\"){{v:2}}=({{v:3}}+{{v:4}}-GetTime())*1000;if {{v:2}}<=0 then {{v:2}}=0;CastSpellByName(\"{spellName}\"{(castOnSelf ? ", \"player\"" : string.Empty)}){{v:5}},{{v:6}}=GetSpellCooldown(\"{spellName}\"){{v:1}}=({{v:5}}+{{v:6}}-GetTime())*1000;{{v:0}}=\"1;\"..{{v:1}} else {{v:0}}=\"0;\"..{{v:2}} end"), out string result))
             {
-                if (result.Length < 3) return false;
+                if (result.Length < 3)
+                {
+                    return false;
+                }
 
                 string[] parts = result.Split(";", StringSplitOptions.RemoveEmptyEntries);
 
-                if (parts.Length < 2) return false;
+                if (parts.Length < 2)
+                {
+                    return false;
+                }
 
                 // replace comma with dot in the cooldown
-                if (parts[1].Contains(',', StringComparison.OrdinalIgnoreCase)) parts[1] = parts[1].Replace(',', '.');
+                if (parts[1].Contains(',', StringComparison.OrdinalIgnoreCase))
+                {
+                    parts[1] = parts[1].Replace(',', '.');
+                }
 
                 if (int.TryParse(parts[0], out int castSuccessful)
                     && double.TryParse(parts[1], NumberStyles.Any, CultureInfo.InvariantCulture, out double cooldown))
@@ -961,7 +1012,7 @@ namespace AmeisenBotX.Core.Statemachine.CombatClasses.Jannis
             }
         }
 
-        private bool IsInRange(Spell spell, WowUnit wowUnit)
+        protected bool IsInRange(Spell spell, WowUnit wowUnit)
         {
             if ((spell.MinRange == 0 && spell.MaxRange == 0) || spell.MaxRange == 0)
             {
@@ -969,7 +1020,7 @@ namespace AmeisenBotX.Core.Statemachine.CombatClasses.Jannis
             }
 
             double distance = WowInterface.ObjectManager.Player.Position.GetDistance(wowUnit.Position);
-            return distance >= spell.MinRange && distance <= spell.MaxRange;
+            return distance >= spell.MinRange && distance <= spell.MaxRange - 1.0;
         }
     }
 }

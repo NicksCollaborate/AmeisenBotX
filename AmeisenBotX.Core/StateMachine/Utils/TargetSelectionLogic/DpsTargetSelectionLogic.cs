@@ -1,7 +1,7 @@
 ﻿using AmeisenBotX.Core.Common;
 using AmeisenBotX.Core.Data.Enums;
 using AmeisenBotX.Core.Data.Objects.WowObjects;
-using System;
+using AmeisenBotX.Core.Movement.Pathfinding.Objects;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -20,6 +20,8 @@ namespace AmeisenBotX.Core.Statemachine.Utils.TargetSelectionLogic
 
         private WowInterface WowInterface { get; }
 
+        private AmeisenBotConfig Config { get; }
+
         public void Reset()
         {
         }
@@ -37,9 +39,11 @@ namespace AmeisenBotX.Core.Statemachine.Utils.TargetSelectionLogic
                 return false;
             }
 
+            Vector3 position = Config.StayCloseToGroupInCombat ? WowInterface.ObjectManager.MeanGroupPosition : WowInterface.ObjectManager.Player.Position;
+
             if (PriorityTargets != null && PriorityTargets.Any())
             {
-                IEnumerable<WowUnit> nearPriorityEnemies = WowInterface.ObjectManager.GetNearEnemies<WowUnit>(WowInterface.ObjectManager.Player.Position, 64.0)
+                IEnumerable<WowUnit> nearPriorityEnemies = WowInterface.ObjectManager.GetNearEnemies<WowUnit>(position, 64.0)
                     .Where(e => BotUtils.IsValidUnit(e) && !e.IsDead && e.Health > 0 && e.IsInCombat && PriorityTargets.Any(x => e.DisplayId == x) && e.Position.GetDistance(WowInterface.ObjectManager.Player.Position) < 80.0)
                     .OrderBy(e => e.Position.GetDistance(WowInterface.ObjectManager.Player.Position));
 
@@ -51,7 +55,7 @@ namespace AmeisenBotX.Core.Statemachine.Utils.TargetSelectionLogic
             }
 
             IEnumerable<WowUnit> nearEnemies = WowInterface.ObjectManager
-                .GetEnemiesInCombatWithUs<WowUnit>(WowInterface.ObjectManager.Player.Position, 64.0)
+                .GetEnemiesInCombatWithGroup<WowUnit>(position, 64.0)
                 .Where(e => !(WowInterface.ObjectManager.MapId == MapId.HallsOfReflection && e.Name == "The Lich King")
                          && !(WowInterface.ObjectManager.MapId == MapId.DrakTharonKeep && WowInterface.ObjectManager.WowObjects.OfType<WowDynobject>().Any(e => e.SpellId == 47346))) // Novos fix
                 .OrderByDescending(e => e.Type) // make sure players are at the top (pvp)
@@ -67,7 +71,7 @@ namespace AmeisenBotX.Core.Statemachine.Utils.TargetSelectionLogic
                 return true;
             }
 
-            nearEnemies = WowInterface.ObjectManager.GetNearEnemies<WowUnit>(WowInterface.ObjectManager.Player.Position, 100.0);
+            nearEnemies = WowInterface.ObjectManager.GetNearEnemies<WowUnit>(position, 100.0).Where(e => e.IsInCombat);
 
             if (nearEnemies.Any())
             {

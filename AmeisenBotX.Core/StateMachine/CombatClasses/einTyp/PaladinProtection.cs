@@ -8,6 +8,7 @@ using AmeisenBotX.Core.Statemachine.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using AmeisenBotX.Core.Movement.Enums;
 
 namespace AmeisenBotX.Core.Statemachine.CombatClasses.einTyp
 {
@@ -17,7 +18,7 @@ namespace AmeisenBotX.Core.Statemachine.CombatClasses.einTyp
         private double distanceToTarget = 0;
         private bool multipleTargets = false;
         private bool standing = false;
-        private WowInterface WowInterface;
+        private readonly WowInterface WowInterface;
         private readonly string[] runningEmotes = { "/question", "/talk" };
         private readonly string[] standingEmotes = { "/bow" };
 
@@ -165,7 +166,10 @@ namespace AmeisenBotX.Core.Statemachine.CombatClasses.einTyp
                 WowUnit target = WowInterface.ObjectManager.Target;
                 WowUnit leader = null;
                 if (leaderGuid != 0)
+                {
                     leader = WowInterface.ObjectManager.GetWowObjectByGuid<WowUnit>(leaderGuid);
+                }
+
                 if (leaderGuid != 0 && leaderGuid != WowInterface.ObjectManager.PlayerGuid && leader != null && !(leader.IsDead || leader.Health < 1))
                 {
                     WowInterface.MovementEngine.SetMovementAction(Movement.Enums.MovementAction.Moving, WowInterface.ObjectManager.GetWowObjectByGuid<WowUnit>(leaderGuid).Position);
@@ -202,6 +206,31 @@ namespace AmeisenBotX.Core.Statemachine.CombatClasses.einTyp
                     Dancing = true;
                 }
             }
+        }
+
+        public void AttackTarget()
+        {
+            WowUnit target = WowInterface.ObjectManager.Target;
+            if (target == null)
+            {
+                return;
+            }
+
+            if (WowInterface.ObjectManager.Player.Position.GetDistance(target.Position) <= 3.0)
+            {
+                WowInterface.HookManager.WowStopClickToMove();
+                WowInterface.MovementEngine.Reset();
+                WowInterface.HookManager.WowUnitRightClick(target);
+            }
+            else
+            {
+                WowInterface.MovementEngine.SetMovementAction(MovementAction.Moving, target.Position);
+            }
+        }
+
+        public bool IsTargetAttackable(WowUnit target)
+        {
+            return true;
         }
 
         private void HandleAttacking(WowUnit target)
@@ -391,7 +420,10 @@ namespace AmeisenBotX.Core.Statemachine.CombatClasses.einTyp
             if (computeNewRoute)
             {
                 if (!BotMath.IsFacing(LastPlayerPosition, WowInterface.ObjectManager.Player.Rotation, LastTargetPosition, 0.5f))
+                {
                     WowInterface.HookManager.WowFacePosition(WowInterface.ObjectManager.Player, target.Position);
+                }
+
                 WowInterface.MovementEngine.SetMovementAction(Movement.Enums.MovementAction.Moving, target.Position, target.Rotation);
             }
         }

@@ -71,45 +71,53 @@ namespace AmeisenBotX.Core.Quest.Objects.Objectives
         private WowInterface WowInterface { get; }
 
         private WowUnit WowUnit { get; set; }
+        
+        private DateTime LastUnitCheck { get; set; } = DateTime.Now;
 
         public void Execute()
         {
             if (Finished || WowInterface.ObjectManager.Player.IsCasting) { return; }
-            
-            if (WowInterface.ObjectManager.Target != null
-                && !WowInterface.ObjectManager.Target.IsDead
-                && !WowInterface.ObjectManager.Target.IsNotAttackable
-                && WowInterface.HookManager.WowGetUnitReaction(WowInterface.ObjectManager.Player, WowInterface.ObjectManager.Target) != WowUnitReaction.Friendly)
-            {
-                WowUnit = WowInterface.ObjectManager.Target;
-            }
-            else
-            {
-                WowInterface.HookManager.WowClearTarget();
 
+            if (!WowInterface.ObjectManager.Player.IsInCombat && DateTime.Now.Subtract(LastUnitCheck).TotalMilliseconds >= 1250.0)
+            {
+                LastUnitCheck = DateTime.Now;
                 WowUnit = WowInterface.ObjectManager.WowObjects
                     .OfType<WowUnit>()
-                    .Where(e => !e.IsDead && NpcIds.Contains(WowGUID.NpcId(e.Guid)))
+                    .Where(e => !e.IsDead && NpcIds.Contains(WowGUID.NpcId(e.Guid)) && !e.IsNotAttackable 
+                                && WowInterface.HookManager.WowGetUnitReaction(WowInterface.ObjectManager.Player, e) != WowUnitReaction.Friendly)
                     .OrderBy(e => e.Position.GetDistance(WowInterface.ObjectManager.Player.Position))
+                    .Take(3)
+                    .OrderBy(e => WowInterface.PathfindingHandler.GetPathDistance((int)WowInterface.ObjectManager.MapId, WowInterface.ObjectManager.Player.Position, e.Position))
                     .FirstOrDefault();
+                
+                // Kill enemies in the path
+                if (WowUnit != null && !WowInterface.CombatClass.IsTargetAttackable(WowUnit))
+                {
+                    var path = WowInterface.PathfindingHandler.GetPath((int)WowInterface.ObjectManager.MapId,
+                    WowInterface.ObjectManager.Player.Position, WowUnit.Position);
+                    if (path != null)
+                    {
+                        var nearEnemies =
+                            WowInterface.ObjectManager.GetEnemiesInPath<WowUnit>(path, 10.0);
+                        if (nearEnemies.Any())
+                        {
+                            WowUnit = nearEnemies.FirstOrDefault();
+                        }
+                    }
+                }
+
+                if (WowUnit != null)
+                {
+                    WowInterface.HookManager.WowTargetGuid(WowUnit.Guid);
+                }
             }
 
             if (WowUnit != null)
             {
                 SearchAreas.NotifyDetour();
-                // TODO: Distance depending on CombatClass
-                if (WowUnit.Position.GetDistance(WowInterface.ObjectManager.Player.Position) < 3.0)
-                {
-                    WowInterface.HookManager.WowStopClickToMove();
-                    WowInterface.MovementEngine.Reset();
-                    WowInterface.HookManager.WowUnitRightClick(WowUnit);
-                }
-                else
-                {
-                    WowInterface.MovementEngine.SetMovementAction(MovementAction.Moving, WowUnit.Position);
-                }
+                WowInterface.CombatClass.AttackTarget();
             }
-            else if (WowInterface.MovementEngine.IsAtTargetPosition || SearchAreas.HasAbortedPath())
+            else if (WowInterface.MovementEngine.IsAtTargetPosition || SearchAreas.HasAbortedPath() || WowInterface.MovementEngine.MovementAction == MovementAction.None)
             {
                 WowInterface.MovementEngine.SetMovementAction(MovementAction.Moving,
                     SearchAreas.GetNextPosition(WowInterface));
