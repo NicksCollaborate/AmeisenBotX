@@ -17,12 +17,12 @@ namespace AmeisenBotX.Core.Statemachine.CombatClasses.Kamel
 {
     public class DeathknightBlood : ICombatClass
     {
-        public DeathknightBlood(WowInterface wowInterface)
+        public DeathknightBlood(WowInterface wowInterface, AmeisenBotConfig config)
         {
             WowInterface = wowInterface;
             ObjectManager = wowInterface.ObjectManager;
             HookManager = wowInterface.HookManager;
-            TargetManager = new TargetManager(new DpsTargetSelectionLogic(wowInterface), TimeSpan.FromMilliseconds(250));//Heal/Tank/DPS
+            TargetManager = new TargetManager(new DpsTargetSelectionLogic(wowInterface, config), TimeSpan.FromMilliseconds(250));//Heal/Tank/DPS
         }
         
         private WowInterface WowInterface { get; }

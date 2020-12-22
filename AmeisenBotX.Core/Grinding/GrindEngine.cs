@@ -142,7 +142,7 @@ namespace AmeisenBotX.Core.Grinding
             }
             else
             {
-                if (WowInterface.ObjectManager.Partymembers.Any(e => e.IsDead || e.Position.GetDistance(WowInterface.ObjectManager.Player.Position) > 30.0))
+                if (WowInterface.ObjectManager.Partymembers.Any(e => e.IsDead))
                 {
                     WowInterface.MovementEngine.StopMovement();
                     return;

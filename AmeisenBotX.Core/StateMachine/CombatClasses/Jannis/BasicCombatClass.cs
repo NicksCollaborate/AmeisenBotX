@@ -400,6 +400,8 @@ namespace AmeisenBotX.Core.Statemachine.CombatClasses.Jannis
 
         private readonly float maxAngle = (float)(Math.PI * 2.0);
 
+        public static AmeisenBotConfig Config { get; set; }
+
         private readonly int[] useableHealingItems = new int[]
         {
             // potions
@@ -428,9 +430,9 @@ namespace AmeisenBotX.Core.Statemachine.CombatClasses.Jannis
             CooldownManager = new CooldownManager(WowInterface.CharacterManager.SpellBook.Spells);
             RessurrectionTargets = new Dictionary<string, DateTime>();
 
-            TargetManagerDps = new TargetManager(new DpsTargetSelectionLogic(WowInterface), TimeSpan.FromMilliseconds(250));
-            TargetManagerTank = new TargetManager(new TankTargetSelectionLogic(WowInterface), TimeSpan.FromMilliseconds(250));
-            TargetManagerHeal = new TargetManager(new HealTargetSelectionLogic(WowInterface), TimeSpan.FromMilliseconds(250));
+            TargetManagerDps = new TargetManager(new DpsTargetSelectionLogic(WowInterface, Config), TimeSpan.FromMilliseconds(250));
+            TargetManagerTank = new TargetManager(new TankTargetSelectionLogic(WowInterface, Config), TimeSpan.FromMilliseconds(250));
+            TargetManagerHeal = new TargetManager(new HealTargetSelectionLogic(WowInterface, Config), TimeSpan.FromMilliseconds(250));
 
             MyAuraManager = new AuraManager(() => WowInterface.ObjectManager.Player?.Auras);
             TargetAuraManager = new AuraManager(() => WowInterface.ObjectManager.Target?.Auras);

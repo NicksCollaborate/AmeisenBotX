@@ -10,11 +10,12 @@ namespace AmeisenBotX.Core.Statemachine.Utils.TargetSelectionLogic
 {
     public class TankTargetSelectionLogic : ITargetSelectionLogic
     {
-        public TankTargetSelectionLogic(WowInterface wowInterface)
+        public TankTargetSelectionLogic(WowInterface wowInterface, AmeisenBotConfig config)
         {
             WowInterface = wowInterface;
             PriorityTargets = new List<int>();
             BlacklistedTargets = new List<int>();
+            Config = config;
         }
 
         public IEnumerable<int> BlacklistedTargets { get; set; }

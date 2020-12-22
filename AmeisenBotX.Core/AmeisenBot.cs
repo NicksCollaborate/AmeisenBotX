@@ -336,6 +336,10 @@ namespace AmeisenBotX.Core
 
         private void InitCombatClasses()
         {
+            // set static Config variable for combatclasses that need it
+            Statemachine.CombatClasses.Jannis.BasicCombatClass.Config = Config;
+            Statemachine.CombatClasses.ToadLump.BasicCombatClass.Config = Config;
+
             // Add your custom combat classes here!
             // ------------------------------------ >
             CombatClasses = new List<ICombatClass>
@@ -368,7 +372,7 @@ namespace AmeisenBotX.Core
                 new Statemachine.CombatClasses.Jannis.WarriorArms(StateMachine),
                 new Statemachine.CombatClasses.Jannis.WarriorFury(StateMachine),
                 new Statemachine.CombatClasses.Jannis.WarriorProtection(StateMachine),
-                new Statemachine.CombatClasses.Kamel.DeathknightBlood(WowInterface),
+                new Statemachine.CombatClasses.Kamel.DeathknightBlood(WowInterface, Config),
                 new Statemachine.CombatClasses.Kamel.RestorationShaman (WowInterface),
                 new Statemachine.CombatClasses.Kamel.PaladinProtection (WowInterface),
                 new Statemachine.CombatClasses.Kamel.PriestHoly (WowInterface),

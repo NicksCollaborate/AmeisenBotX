@@ -9,9 +9,10 @@ namespace AmeisenBotX.Core.Statemachine.Utils.TargetSelectionLogic
 {
     public class DpsTargetSelectionLogic : ITargetSelectionLogic
     {
-        public DpsTargetSelectionLogic(WowInterface wowInterface)
+        public DpsTargetSelectionLogic(WowInterface wowInterface, AmeisenBotConfig config)
         {
             WowInterface = wowInterface;
+            Config = config;
         }
 
         public IEnumerable<int> BlacklistedTargets { get; set; }

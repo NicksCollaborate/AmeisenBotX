@@ -6,9 +6,10 @@ namespace AmeisenBotX.Core.Statemachine.Utils.TargetSelectionLogic
 {
     public class HealTargetSelectionLogic : ITargetSelectionLogic
     {
-        public HealTargetSelectionLogic(WowInterface wowInterface)
+        public HealTargetSelectionLogic(WowInterface wowInterface, AmeisenBotConfig config)
         {
             WowInterface = wowInterface;
+            Config = config;
         }
 
         public IEnumerable<int> BlacklistedTargets { get; set; }
@@ -16,6 +17,8 @@ namespace AmeisenBotX.Core.Statemachine.Utils.TargetSelectionLogic
         public IEnumerable<int> PriorityTargets { get; set; }
 
         private WowInterface WowInterface { get; }
+
+        private AmeisenBotConfig Config { get; }
 
         public void Reset()
         {
